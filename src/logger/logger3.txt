@@ -1,0 +1,11 @@
+2018-05-24-22:12:02 INFO:添加点Computer1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加点Computer2 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加点Server1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加点Router1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加点Router2 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边R1S1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边C1S1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边C2S1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边R1C2 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边R2S1 factory.NetworkTopologyFactory.createGraph
+2018-05-24-22:12:02 INFO:添加边R2C2 factory.NetworkTopologyFactory.createGraph

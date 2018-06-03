@@ -1,0 +1,16 @@
+GraphType = "MovieGraph"
+VertexType = "Movie", "Actor", "Director"
+Vertex = <"TheShawshankRedemption", "Movie", <"1999", "USA", "9.3">>
+Vertex = <"FrankDarabont", "Director", <"59", "M">>
+Vertex = <"MorganFreeman", "Actor", <"81", "M">>
+Vertex = <"TimRobbins", "Actor", <"60", "M">>
+Vertex = <"TheGreenMile", "Movie", <"1999", "USA", "8.5">>
+Vertex = <"TomHanks", "Actor", <"62", "M">>
+EdgeType = "MovieActorRelation", "MovieDirectorRelation","SameMovieHyperEdge"
+Edge = <"SRMF", "MovieActorRelation", "1.0",  "TheShawshankRedemption","TimRobbins", "No">
+Edge = <"SRFD", "MovieDirectorRelation", "-1.0",  "TheShawshankRedemption","FrankDarabont", "No">
+HyperEdge = <"ActorsInSR","SameMovieHyperEdge",{"TimRobbins", "MorganFreeman"}>
+Edge = <"GMTH", "MovieActorRelation", "1.0",  "TheGreenMile","TomHanks", "No">
+Edge = <"SRTR", "MovieActorRelation", "2.0",  "TheShawshankRedemption","MorganFreeman", "No">
+Edge = <"MRFD", "MovieDirectorRelation", "-1.0",  "TheGreenMile","FrankDarabont", "No">
+

@@ -1,0 +1,17 @@
+GraphType = "NetworkTopology"
+GraphName = "LabNetwork"
+
+VertexType = "Computer", "Router", "Server"
+Vertex = <"Computer1", "Computer", <"192.168.1.101">>
+Vertex = <"Computer2", "Computer", <"192.168.1.102">>
+Vertex = <"Server1", "Server", <"192.168.1.2">>
+Vertex = <"Router1", "Router", <"192.168.1.1">>
+Vertex = <"Router2", "Router", <"192.168.1.3">>
+
+EdgeType = "NetworkConnection"
+Edge = <"R1S1", "NetworkConnection", "100", "Router1","Router1", "No">
+Edge = <"C1S1", "NetworkConnection", "10", "Computer1","Server1", "No">
+Edge = <"C2S1", "NetworkConnection", "120", "Computer2","Server1", "No">
+Edge = <"R1C2", "NetworkConnection", "20", "Router1","Computer2", "No">
+Edge = <"R2S1", "NetworkConnection", "60", "Router2","Server1", "No">
+Edge = <"R2C2", "NetworkConnection", "60", "Router2","Computer2", "No">
