@@ -88,7 +88,7 @@ public class NetworkTopology extends ConcreteGraph{
 			}
 			sourcemap.put(onevertex, listdou);
 		}
-		checkRep();
+//		checkRep();
 		return sourcemap;
 	}
 	
@@ -151,7 +151,7 @@ public class NetworkTopology extends ConcreteGraph{
 			}
 			targetmap.put(onevertex, listdou);
 		}
-		checkRep();
+//		checkRep();
 		return targetmap;
 	}
 	

@@ -2,7 +2,6 @@ package graph;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface Graph<L, E> {
 
@@ -33,5 +32,5 @@ public interface Graph<L, E> {
 	public boolean removeEdge(E edge);
 
 	// 返回边的集合（包括超边）
-	public Set<E> edges();
+	public List<E> edges();
 }

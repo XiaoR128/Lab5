@@ -85,9 +85,10 @@ public abstract class Edge {
 	 */
 	public List<Vertex> vertices() {
 		List<Vertex> vertex = new ArrayList<>();
-		for (Vertex v : vertices) {
-			vertex.add(v);
-		}
+//		for (Vertex v : vertices) {
+//			vertex.add(v);
+//		}
+		vertex = vertices;
 		return vertex;
 	}
 

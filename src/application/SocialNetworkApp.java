@@ -13,6 +13,12 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Strategy.BufferedoutputStream;
+import Strategy.FileoutputStream;
+import Strategy.Filewriter;
+import Strategy.InmethodStrategy;
+import Strategy.InputStream;
+import Strategy.OutmethodStrategy;
 import edge.CommentTie;
 import edge.Edge;
 import edge.ForwardTie;
@@ -46,8 +52,8 @@ public class SocialNetworkApp {
 	/**
 	 * 创建一张图
 	 */
-	public Graph<Vertex, Edge> creatgraph(String file){
-		this.graph = new SocialNetworkFactory().createGraph(file);
+	public Graph<Vertex, Edge> creatgraph(String file,InmethodStrategy in){
+		this.graph = new SocialNetworkFactory().createGraph(file,in);
 		return graph;
 	}
 	
@@ -77,7 +83,7 @@ public class SocialNetworkApp {
 		p[1] = b[3];
 		Vertex ve = new  PersonVertexFactory().createVertex(b[0], b[1], p);
 		graph.addVertex(ve);
-		log.info("创建点"+b[0]);
+//		log.info("创建点"+b[0]);
 		System.out.println("创建点"+b[0]+"成功！");
 		return true;
 	}
@@ -110,7 +116,7 @@ public class SocialNetworkApp {
 				graph.removeVertex(v);
 			}
 		}
-		log.info("删除点"+b1[0]);
+//		log.info("删除点"+b1[0]);
 		System.out.println("删除点成功！");
 		return true;
 	}
@@ -158,7 +164,7 @@ public class SocialNetworkApp {
 			ed = new FriendTieFactory().createEdge(b1[0], b1[1], Double.parseDouble(b1[2]), vertice);
 		}
 		graph.addEdge(ed);
-		log.info("添加边"+b1[0]);
+//		log.info("添加边"+b1[0]);
 		System.out.println("添加成功！");
 		return true;
 	}
@@ -190,7 +196,7 @@ public class SocialNetworkApp {
 			if(ed.getlabel().equals(a)) {
 				flag=0;
 				graph.removeEdge(ed);
-				log.info("删除边"+a);
+//				log.info("删除边"+a);
 				System.out.println("删除成功！");
 			}
 		}
@@ -228,7 +234,7 @@ public class SocialNetworkApp {
 				ed.setlabel(b1[1]);
 			}
 		}
-		log.info("修改边"+b1[0]+"为"+b1[1]);
+//		log.info("修改边"+b1[0]+"为"+b1[1]);
 		System.out.println("修改成功！");
 	}
 	
@@ -401,45 +407,50 @@ public class SocialNetworkApp {
 	 * 将读入的图数据存储在result文件夹的SocialNetworkResult.txt中
 	 * @param graph
 	 */
-	public void writeback(Graph<Vertex, Edge> graph) {
-		try {
- 			File file2 = new File("src/result/SocialNetworkResult.txt");
- 			file2.delete();
- 			file2.createNewFile();
- 			PrintWriter pw = new PrintWriter(new FileWriter("src/result/SocialNetworkResult.txt"));
-			String line=new String();
-			line = line+"GraphType = \"SocialNetwork\""+"\n";
-			line = line+"VertexType = \"Person\""+"\n";
-			for(Vertex v : graph.vertices()) {
-				Person p = (Person) v;
-				line=line+"Vertex = <\""+p.getLabel()+"\", \"Person\", <\""+p.getgender()+
-						"\",\""+p.getage()+"\">>"+"\n";
-			}
-			line = line+"EdgeType = \"CommentTie\", \"ForwardTie\",\"FriendTie\""+"\n";
-			for(Edge e:graph.edges()) {
-				if(e instanceof ForwardTie) {
-					ForwardTie ed = (ForwardTie) e;
-					String la = ed.getlabel();
-					line = line+"Edge = <\""+la+"\", \"ForwardTie\", \""+ed.getweight()+"\",  \""+
-							ed.vertices().get(0).getLabel()+"\",\""+ed.vertices().get(1).getLabel()+"\", \"Yes\">"+"\n";
-				}else if(e instanceof CommentTie) {
-					CommentTie ed = (CommentTie) e;
-					String la = ed.getlabel();
-					line = line+"Edge = <\""+la+"\", \"CommentTie\", \""+ed.getweight()+"\",  \""+
-							ed.vertices().get(0).getLabel()+"\",\""+ed.vertices().get(1).getLabel()+"\", \"Yes\">"+"\n";
-				}else if(e instanceof FriendTie) {
-					FriendTie ed = (FriendTie) e;
-					String la = ed.getlabel();
-					line = line+"Edge = <\""+la+"\", \"FriendTie\", \""+ed.getweight()+"\",  \""+
-							ed.vertices().get(0).getLabel()+"\",\""+ed.vertices().get(1).getLabel()+"\", \"Yes\">"+"\n";
-				}
-			}
-			pw.println(line);
-			System.out.println("写回成功！");
-			pw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+	public void writeback(Graph<Vertex, Edge> graph,OutmethodStrategy out) {
+		List<String> li = new ArrayList<>();
+		li.add("GraphType = \"SocialNetwork\"" + "\n");
+		li.add("VertexType = \"Person\"" + "\n");
+		for (Vertex v : graph.vertices()) {
+			Person p = (Person) v;
+			li.add("Vertex = <\"" + p.getLabel() + "\", \"Person\", <\"" + p.getgender() + "\",\"" + p.getage()
+					+ "\">>" + "\n");
 		}
+		li.add("EdgeType = \"CommentTie\", \"ForwardTie\",\"FriendTie\"" + "\n");
+		for (Edge e : graph.edges()) {
+			if (e instanceof ForwardTie) {
+				ForwardTie ed = (ForwardTie) e;
+				String la = ed.getlabel();
+				li.add("Edge = <\"" + la + "\", \"ForwardTie\", \"" + ed.getweight() + "\",  \""
+						+ ed.vertices().get(0).getLabel() + "\",\"" + ed.vertices().get(1).getLabel() + "\", \"Yes\">"
+						+ "\n");
+			} else if (e instanceof CommentTie) {
+				CommentTie ed = (CommentTie) e;
+				String la = ed.getlabel();
+				li.add("Edge = <\"" + la + "\", \"CommentTie\", \"" + ed.getweight() + "\",  \""
+						+ ed.vertices().get(0).getLabel() + "\",\"" + ed.vertices().get(1).getLabel() + "\", \"Yes\">"
+						+ "\n");
+			} else if (e instanceof FriendTie) {
+				FriendTie ed = (FriendTie) e;
+				String la = ed.getlabel();
+				li.add("Edge = <\"" + la + "\", \"FriendTie\", \"" + ed.getweight() + "\",  \""
+						+ ed.vertices().get(0).getLabel() + "\",\"" + ed.vertices().get(1).getLabel() + "\", \"Yes\">"
+						+ "\n");
+			}
+		}
+
+		File file1 = new File("src/result/SocialNetworkResult.txt");
+		file1.delete();
+		try {
+			file1.createNewFile();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		long start = System.currentTimeMillis();
+		out.output("src/result/SocialNetworkResult.txt", li);
+		long end = System.currentTimeMillis();
+		System.out.println("写回时间:" + (end - start)+"ms");
 	}
 	
 	/*
@@ -461,48 +472,58 @@ public class SocialNetworkApp {
 			System.out.println("(16:退出)");
 			c = scan.nextInt();
 			if(c==1) {
-				Graph<Vertex, Edge> gg = app.creatgraph("src/txt/SocialNetwork.txt");
+				Graph<Vertex, Edge> gg = app.creatgraph("src/Lab5_txt/file3.txt",new InputStream());
 				while(gg==null) {
 					System.out.println("请选择(输入)一个其他的文本文件(的路径):");
 					Scanner scan1 = new Scanner(System.in);
 					String s = scan1.nextLine();
 					scan1.close();
-					gg = app.creatgraph(s);
+					gg = app.creatgraph(s,new InputStream());
 				}
 				System.out.println("图构建成功！");
-				System.out.println(app.graph.toString());
+				List<String> li = new ArrayList<>();
+				for(Vertex v : app.graph.vertices()) {
+					li.add(v.toString());
+					li.add("\n");
+				}
+				for(Edge e :app.graph.edges()) {
+					li.add(e.toString());
+					li.add("\n");
+				}
+				System.out.println(li);
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==2) {
 				app.addvert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==3) {
 				app.removevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==4) {
 				app.changevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==5) {
 				app.removeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==6) {
 				app.addedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==7) {
 				app.changeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==8) {
 				app.chaneweight(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==9) {
 				app.changefor(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==10) {
 				app.calcucent(app.graph);
@@ -519,7 +540,7 @@ public class SocialNetworkApp {
 			else if(c==14) {
 				app.lookformethod("src/logger/logger2.txt");
 			}else if(c==15) {
-				app.writeback(app.graph);
+				app.writeback(app.graph,new BufferedoutputStream());
 			}else if(c==16) {
 				flag=0;
 			}

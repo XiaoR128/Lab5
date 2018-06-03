@@ -54,7 +54,7 @@ public class MovieGraph extends ConcreteGraph{
 				}
 			}
 		}
-		checkRep();
+//		checkRep();
 		return sourcemap;
 	}
 	
@@ -83,7 +83,7 @@ public class MovieGraph extends ConcreteGraph{
 				}
 			}
 		}
-		checkRep();
+//		checkRep();
 		return targetmap;
 	}
 	
@@ -92,18 +92,18 @@ public class MovieGraph extends ConcreteGraph{
 	 */
 	@Override
 	public boolean addEdge(Edge edge) {
-		for(Edge edg : edges) { 
-			if (edg.equals(edge)) {
-				return false;
-			}
-		}
+//		for(Edge edg : edges) { 
+//			if (edg.equals(edge)) {
+//				return false;
+//			}
+//		}
 		if(edge instanceof SameMovieHyperEdge) {
 			if(edge.vertices().size()<=1) {
 				return false;
 			}
 		}
 		edges.add(edge);
-		checkRep();
+//		checkRep();
 		return true;
 	}
 	

@@ -24,8 +24,8 @@ public class Director extends Vertex{
 	@Override
 	public void fillVertexInfo (String[] args) {
 		assert args.length==2;
-		this.age = Integer.parseInt(args[0]);
-		this.mgender = args[1];
+		this.age = Integer.parseInt(args[1]);
+		this.mgender = args[0];
 	}
 	
 	/**

@@ -45,7 +45,7 @@ public class GraphPoet extends ConcreteGraph{
 				edges.remove(e);
 			}
 		}
-		checkRep();
+//		checkRep();
 		return true;
 	}
 	
@@ -86,7 +86,7 @@ public class GraphPoet extends ConcreteGraph{
 				break;
 			}
 		}
-		checkRep();
+//		checkRep();
 		return true;
 	}
 	
@@ -111,7 +111,7 @@ public class GraphPoet extends ConcreteGraph{
 				}
 			}
 		}
-		checkRep();
+//		checkRep();
 		return sourcemap;
 	}
 	
@@ -136,7 +136,7 @@ public class GraphPoet extends ConcreteGraph{
 				}
 			}
 		}
-		checkRep();
+//		checkRep();
 		return targetmap;
 	}
 	

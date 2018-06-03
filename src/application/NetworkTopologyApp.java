@@ -3,9 +3,7 @@ package application;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -13,10 +11,11 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Strategy.BufferedoutputStream;
+import Strategy.InmethodStrategy;
+import Strategy.InputStream;
+import Strategy.OutmethodStrategy;
 import edge.Edge;
-import edge.MovieActorRelation;
-import edge.MovieDirectorRelation;
-import edge.SameMovieHyperEdge;
 import factory.ComputerVertexFactory;
 import factory.MyLogHander;
 import factory.NetworkConnectionFactory;
@@ -32,14 +31,10 @@ import helper.GraphMetrics;
 import helper.betweennessStrategy;
 import helper.closenessStrategy;
 import helper.degreeStrategy;
-import vertex.Actor;
 import vertex.Computer;
-import vertex.Director;
-import vertex.Movie;
 import vertex.Router;
 import vertex.Server;
 import vertex.Vertex;
-import vertex.WirelessRouter;
 
 public class NetworkTopologyApp {
 	private Graph<Vertex, Edge> graph = new NetworkTopology();
@@ -48,8 +43,8 @@ public class NetworkTopologyApp {
 	/**
 	 * 创建一张图
 	 */
-	public Graph<Vertex, Edge> creatgraph(String file) throws IOException{
-		this.graph = new NetworkTopologyFactory().createGraph(file);
+	public Graph<Vertex, Edge> creatgraph(String file,InmethodStrategy in){
+		this.graph = new NetworkTopologyFactory().createGraph(file,in);
 		return graph;
 	}
 	
@@ -87,7 +82,7 @@ public class NetworkTopologyApp {
 			ve = new WirelessRouterVertexFactory().createVertex(b[0],b[1], p);
 		}
 		graph.addVertex(ve);
-		log.info("创建点"+b[0]);
+//		log.info("创建点"+b[0]);
 		System.out.println("创建点"+b[0]+"成功！");
 		return true;
 	}
@@ -120,7 +115,7 @@ public class NetworkTopologyApp {
 				graph.removeVertex(v);
 			}
 		}
-		log.info("删除点"+b1[0]);
+//		log.info("删除点"+b1[0]);
 		System.out.println("删除点成功！");
 		return true;
 	}
@@ -161,7 +156,7 @@ public class NetworkTopologyApp {
 		}
 		Edge ed=new NetworkConnectionFactory().createEdge(b1[0], b1[1], Double.parseDouble(b1[2]), vertice);
 		graph.addEdge(ed);
-		log.info("添加边"+b1[0]);
+//		log.info("添加边"+b1[0]);
 		System.out.println("添加成功！");
 		return true;
 	}
@@ -193,7 +188,7 @@ public class NetworkTopologyApp {
 			if(ed.getlabel().equals(a)) {
 				flag=0;
 				graph.removeEdge(ed);
-				log.info("删除边"+a);
+//				log.info("删除边"+a);
 				System.out.println("删除成功！");
 			}
 		}
@@ -231,7 +226,7 @@ public class NetworkTopologyApp {
 				ed.setlabel(b1[1]);
 			}
 		}
-		log.info("修改边"+b1[0]+"为"+b1[1]);
+//		log.info("修改边"+b1[0]+"为"+b1[1]);
 		System.out.println("修改成功！");
 	}
 	
@@ -398,42 +393,43 @@ public class NetworkTopologyApp {
 	 * 将读入的图数据存储在result文件夹的NetworkTopologyResult.txt中
 	 * @param graph
 	 */
-	public void writeback(Graph<Vertex, Edge> graph) {
-		try {
- 			File file2 = new File("src/result/NetworkTopologyResult.txt");
- 			file2.delete();
- 			file2.createNewFile();
- 			PrintWriter pw = new PrintWriter(new FileWriter("src/result/NetworkTopologyResult.txt"));
-			String line=new String();
-			line = line+"GraphType = \"NetworkTopology\""+"\n";
-			line = line+"VertexType = \"Computer\", \"Router\", \"Server\""+"\n";
-			for(Vertex v : graph.vertices()) {
-				if(v instanceof Server) {
-					Server ve=(Server) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Server\", <\""+ve.getip()+"\">>"+"\n";
-				}else if(v instanceof Computer) {
-					Computer ve=(Computer) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Computer\", <\""+ve.getip()+"\">>"+"\n";
-				}else if(v instanceof Router) {
-					Router ve=(Router) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Router\", <\""+ve.getip()+"\">>"+"\n";
-				}
+	public void writeback(Graph<Vertex, Edge> graph,OutmethodStrategy out) {
+		List<String> li = new ArrayList<>();
+		li.add("GraphType = \"NetworkTopology\"" + "\n");
+		li.add("VertexType = \"Computer\", \"Router\", \"Server\"" + "\n");
+		for (Vertex v : graph.vertices()) {
+			if (v instanceof Server) {
+				Server ve = (Server) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Server\", <\"" + ve.getip() + "\">>" + "\n");
+			} else if (v instanceof Computer) {
+				Computer ve = (Computer) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Computer\", <\"" + ve.getip() + "\">>" + "\n");
+			} else if (v instanceof Router) {
+				Router ve = (Router) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Router\", <\"" + ve.getip() + "\">>" + "\n");
 			}
-			line = line+"EdgeType = \"NetworkConnection\""+"\n";
-			for(Edge e:graph.edges()) {
-				line = line+"Edge = <\""+e.getlabel()+"\", \"NetworkConnection\", \""+e.getweight()+
-						"\", \""+e.vertices().get(0).getLabel()+"\",\""+e.vertices().get(1).getLabel()
-						+"\", \"No\">"+"\n";
-			}
-			pw.println(line);
-			System.out.println("写回成功！");
-			pw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
+		li.add("EdgeType = \"NetworkConnection\"" + "\n");
+		for (Edge e : graph.edges()) {
+			li.add("Edge = <\"" + e.getlabel() + "\", \"NetworkConnection\", \"" + e.getweight() + "\", \""
+					+ e.vertices().get(0).getLabel() + "\",\"" + e.vertices().get(1).getLabel() + "\", \"No\">" + "\n");
+		}
+
+		File file1 = new File("src/result/NetworkTopologyResult.txt");
+		file1.delete();
+		try {
+			file1.createNewFile();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		long start = System.currentTimeMillis();
+		out.output("src/result/NetworkTopologyResult.txt", li);
+		long end = System.currentTimeMillis();
+		System.out.println("写回时间:" + (end - start)+"ms");
 	}
 	/*
 	 * 在此应用中，用户根据提示，输入每条指令对应的数字，执行相应的操作，建议首先输入1构建出一张图出来，
@@ -454,48 +450,57 @@ public class NetworkTopologyApp {
 			System.out.println("(16:退出)");
 			c = scan.nextInt();
 			if(c==1) {
-				Graph<Vertex, Edge> gg = app.creatgraph("src/txt/NetworkTopology.txt");
+				Graph<Vertex, Edge> gg = app.creatgraph("src/Lab5_txt/file1.txt",new InputStream());
 				while(gg==null) {
 					System.out.println("请选择(输入)一个其他的文本文件(的路径):");
 					Scanner scan1 = new Scanner(System.in);
 					String s = scan1.nextLine();
 					scan1.close();
-					gg = app.creatgraph(s);
+					gg = app.creatgraph(s,new InputStream());
 				}
 				System.out.println("图构建成功！");
-				System.out.println(app.graph.toString());
+				List<String> li = new ArrayList<>();
+				for(Vertex v : app.graph.vertices()) {
+					li.add(v.toString());
+					li.add("\n");
+				}
+				for(Edge e :app.graph.edges()) {
+					li.add(e.toString());
+					li.add("\n");
+				}
+				System.out.println(li);
 			}
 			else if(c==2) {
 				app.addvert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==3) {
 				app.removevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==4) {
 				app.changevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==5) {
 				app.removeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==6) {
 				app.addedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==7) {
 				app.changeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==8) {
 				app.chaneweight(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==9) {
 				app.changefor(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==10) {
 				app.calcucent(app.graph);
@@ -512,7 +517,7 @@ public class NetworkTopologyApp {
 			else if(c==14) {
 				app.lookformethod("src/logger/logger3.txt");
 			}else if(c==15) {
-				app.writeback(app.graph);
+				app.writeback(app.graph,new BufferedoutputStream());
 			}else if(c==16) {
 				flag=0;
 			}

@@ -1,11 +1,12 @@
 package factory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.logging.FileHandler;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -22,6 +23,7 @@ import MyException.Scoreexception;
 import MyException.Vertexception;
 import MyException.Weightrong;
 import MyException.yearexception;
+import Strategy.InmethodStrategy;
 import edge.Edge;
 import edge.MovieActorRelation;
 import edge.MovieDirectorRelation;
@@ -39,24 +41,30 @@ public class MovieGraphFactory extends GraphFactory{
 	private static String name = SocialNetworkFactory.class.getName();      
 	private static Logger log = Logger.getLogger(name);
 	@Override
-	public Graph<Vertex, Edge> createGraph(String filePath){
-		FileReader file;
+	public Graph<Vertex, Edge> createGraph(String filePath,InmethodStrategy in){
 		int count=0;
 		Graph<Vertex, Edge> graph = new MovieGraph();
 		int ff=0;
 		try {
 			//添加日志
-			FileHandler fileHandler = new FileHandler("src/logger/logger4.txt"); 
-            fileHandler.setLevel(Level.INFO); 
-            fileHandler.setFormatter(new MyLogHander());
-            log.addHandler(fileHandler); 
+			ConsoleHandler consoleHandler = new ConsoleHandler();
+			consoleHandler.setLevel(Level.INFO);
+			log.addHandler(consoleHandler);
 			
-			file = new FileReader(filePath);
-			BufferedReader bf = new BufferedReader(file);
-			String line = null;
-			List<String> listname = new ArrayList<>();
+			long start = System.currentTimeMillis();
+			String s = in.input(filePath);
+			long end = System.currentTimeMillis();
+			System.out.println("读入文件的时间：" + (end - start)+"ms");
+			String[] ss = s.split("\n|\r");
+			
+			Map<String, Vertex> map = new HashMap<>();
+			Set<String> lili = new HashSet<>();
+			Set<Undirecom> set = new HashSet<>();
+			
+			int first=0;
+			Set<String> listname = new HashSet<>();
 			Pattern ppp0=Pattern.compile("([0-9]|[0-9]\\.\\d{1,2}|10\\.*(0|00)*)");
-			Pattern pppp=Pattern.compile("(19[0-9][0-9]|20[0-1][0-8])");
+//			Pattern pppp=Pattern.compile("(19[0-9][0-9]|200[0-9]|201[0-8])");
 			Pattern ppp=Pattern.compile("-[0-9]\\d*\\.*\\d*");
 			Pattern pp0=Pattern.compile("[0-9]\\d*\\.*\\d*");
 			Pattern ppp1=Pattern.compile("[0-9]\\d*");
@@ -65,16 +73,14 @@ public class MovieGraphFactory extends GraphFactory{
 			Pattern p00=Pattern.compile("Edge\\s*=.+");
 			Pattern p000=Pattern.compile("HyperEdge\\s*=.+");
 			Pattern p1=Pattern.compile("GraphName\\s*=.+");
-			Pattern p2=Pattern.compile("Vertex\\s*=\\s*<\"\\w+\",\\s*\"(Actor|Director)\",\\s*<\"[0-9]\\d*\",\\s*\"(F|M)\">>");
-			Pattern p22=Pattern.compile("Vertex\\s*=\\s*<\"\\w+\",\\s*\"Movie\",\\s*<\"(19[0-9][0-9]|20[0-1][0-8])\",\\s*\"\\w+\",\\s*\"([0-9]|[0-9]\\.\\d{1,2}|10\\.*(0|00)*)\">>");
+			Pattern p2=Pattern.compile("Vertex\\s*=\\s*<\"\\w+\",\\s*\"(Actor|Director)\",\\s*<\"(F|M)\",\\s*\"[0-9]\\d*\">>");
+			Pattern p22=Pattern.compile("Vertex\\s*=\\s*<\"\\w+\",\\s*\"Movie\",\\s*<\"(19[0-9][0-9]|200[0-9]|201[0-8])\",\\s*\"\\w+\",\\s*\"([0-9]|[0-9]\\.\\d{1,2}|10\\.*(0|00)*)\">>");
 			Pattern p3=
 			Pattern.compile("Edge\\s*=\\s*<\"\\w+\",\\s*\"(MovieDirectorRelation|MovieActorRelation)\",\\s*\"-*[0-9]\\d*\\.*\\d*\",\\s*\"\\w+\",\\s*\"\\w+\",\\s*\"No\">");
 //            Pattern p4=Pattern.compile("HyperEdge\\s*=\\s*<\"\\w+\",\\s*\"SameMovieHyperEdge\",\\s*.*>");
 //			GraphPoet graph = new GraphPoet();
-			while((line=bf.readLine())!=null) {
-				if(line.isEmpty()) {
-					continue;
-				}
+			for (int i = 0; i < ss.length; i++) {
+				String line = ss[i];
 				Pattern p=Pattern.compile("\"(.*?)\"");
 				if(p000.matcher(line).matches()) {
 					List<String> li3 = new ArrayList<>();
@@ -94,14 +100,15 @@ public class MovieGraphFactory extends GraphFactory{
 					SameMovieHyperEdge same = new SameMovieHyperEdge(li3.get(0), 0);
 					List<Vertex> list0 = new ArrayList<>();
 					for (int j = 2; j < li3.size(); j++) {
-						for (Vertex ver : graph.vertices()) {
-							if (ver.getLabel().equals(li3.get(j))) {
-								list0.add(ver);
-							}
-						}
+//						for (Vertex ver : graph.vertices()) {
+//							if (ver.getLabel().equals(li3.get(j))) {
+//								list0.add(ver);
+//							}
+//						}
+						list0.add(map.get(li3.get(j)));
 					}
 					same.addVertices(list0);
-					log.info("添加超边"+li3.get(0));
+//					log.info("添加超边"+li3.get(0));
 					graph.addEdge(same);
 				}
 				if(p1.matcher(line).matches()) {
@@ -138,14 +145,14 @@ public class MovieGraphFactory extends GraphFactory{
 						}else if(li1.get(1).equals("Actor")&&li1.size()!=4) {
 							handlevertnum();
 						}else if(li1.get(1).equals("Movie")) {
-							if(!pppp.matcher(li1.get(2)).matches()) {
-								handleyear();
-							}
+//							if(!pppp.matcher(li1.get(2)).matches()) {
+//								handleyear();
+//							}
 							if(!ppp0.matcher(li1.get(li1.size()-1)).matches()) {
 								handlescore();
 							}
 						}else if(li1.get(1).equals("Director")||li1.get(1).equals("Actor")) {
-							if(!ppp1.matcher(li1.get(2)).matches()) {
+							if(!ppp1.matcher(li1.get(3)).matches()) {
 								handlezhen();
 							}
 							if(!li1.get(2).equals("F")&&!li1.get(2).equals("M")) {
@@ -168,7 +175,8 @@ public class MovieGraphFactory extends GraphFactory{
 							}
 							dir.fillVertexInfo(mid2);
 							listname.add(li1.get(0));
-							log.info("添加Director点"+li1.get(0));
+//							log.info("添加Director点"+li1.get(0));
+							map.put(li1.get(0), dir);
 							graph.addVertex(dir);
 							break;
 						case "Actor":
@@ -179,19 +187,21 @@ public class MovieGraphFactory extends GraphFactory{
 							}
 							act.fillVertexInfo(mid1);
 							listname.add(li1.get(0));
-							log.info("添加Actor点"+li1.get(0));
+//							log.info("添加Actor点"+li1.get(0));
+							map.put(li1.get(0), act);
 							graph.addVertex(act);
 							break;
 						}
 					}else if(m22.matches()) {
 						Movie mov = new Movie(li1.get(0));
 						String[] mid = new String[3];
-						for(int i=0;i<3;i++) {
-							mid[i] = li1.get(i+2);
+						for(int j=0;j<3;j++) {
+							mid[j] = li1.get(j+2);
 						}
 						mov.fillVertexInfo(mid);
 						listname.add(li1.get(0));
-						log.info("添加Movie点"+li1.get(0));
+//						log.info("添加Movie点"+li1.get(0));
+						map.put(li1.get(0), mov);
 						graph.addVertex(mov);
 					}
 				}
@@ -233,18 +243,27 @@ public class MovieGraphFactory extends GraphFactory{
 						if(!listname.contains(lis.get(3))||!listname.contains(lis.get(4))) {
 							handleednovert();
 						}
-						if(!graph.edges().isEmpty()) {
+						if(first!=0) {
 							int flag=0,ii=0;
-							for(Edge ed:graph.edges()) {
-								if(ed.getlabel().equals(lis.get(0))) {
-									count++;
-									ii++;
-								}
-								if((ed.vertices().get(0).getLabel().equals(lis.get(3)) || (ed.vertices().get(0).getLabel().equals(lis.get(4))))
-										&&(ed.vertices().get(1).getLabel().equals(lis.get(4))) || (ed.vertices().get(1).getLabel().equals(lis.get(3)))) {
-									log.info("单重图出现了多重边，已忽略后边的边");
-									flag++;
-								}
+//							for(Edge ed:graph.edges()) {
+//								if(ed.getlabel().equals(lis.get(0))) {
+//									count++;
+//									ii++;
+//								}
+//								if((ed.vertices().get(0).getLabel().equals(lis.get(3)) || (ed.vertices().get(0).getLabel().equals(lis.get(4))))
+//										&&(ed.vertices().get(1).getLabel().equals(lis.get(4))) || (ed.vertices().get(1).getLabel().equals(lis.get(3)))) {
+//									log.info("单重图出现了多重边，已忽略后边的边");
+//									flag++;
+//								}
+//							}
+							Undirecom com = new Undirecom(lis.get(3), lis.get(4));
+							if(set.contains(com)) {
+								flag++;
+								log.info("单重图出现了多重边，已忽略后边的边");
+							}
+							if(lili.contains(lis.get(0))) {
+								count++;
+								i++;
 							}
 							if(flag!=1&&ii==0) {
 								switch(lis.get(1)) {
@@ -252,29 +271,25 @@ public class MovieGraphFactory extends GraphFactory{
 //									System.out.println(1);
 									MovieActorRelation movi = new MovieActorRelation(lis.get(0), Double.parseDouble(lis.get(2)));
 									List<Vertex> list = new ArrayList<>();
-									for(int j=3;j<5;j++) {
-										for(Vertex ver : graph.vertices()) {
-											if(ver.getLabel().equals(lis.get(j))) {
-												list.add(ver);
-											}
-										}
-									}
+									Vertex v1 = map.get(lis.get(3));
+									Vertex v2 = map.get(lis.get(4));
+									list.add(v1);
+									list.add(v2);
 									movi.addVertices(list);
-									log.info("添加边"+lis.get(0));
+//									log.info("添加边"+i);
+									lili.add(lis.get(0));
 									graph.addEdge(movi);
 									break;
 								case "MovieDirectorRelation":
 									MovieDirectorRelation movd = new MovieDirectorRelation(lis.get(0),Double.parseDouble(lis.get(2)));
 									List<Vertex> list1 = new ArrayList<>();
-									for(int j=3;j<5;j++) {
-										for(Vertex ver : graph.vertices()) {
-											if(ver.getLabel().equals(lis.get(j))) {
-												list1.add(ver);
-											}
-										}
-									}
+									Vertex v3 = map.get(lis.get(3));
+									Vertex v4 = map.get(lis.get(4));
+									list1.add(v3);
+									list1.add(v4);
 									movd.addVertices(list1);
-									log.info("添加边"+lis.get(0));
+//									log.info("添加边"+i);
+									lili.add(lis.get(0));
 									graph.addEdge(movd);
 									break;
 								}
@@ -284,29 +299,25 @@ public class MovieGraphFactory extends GraphFactory{
 								case "MovieActorRelation":
 									MovieActorRelation movi = new MovieActorRelation(lis.get(0)+count, Double.parseDouble(lis.get(2)));
 									List<Vertex> list = new ArrayList<>();
-									for(int j=3;j<5;j++) {
-										for(Vertex ver : graph.vertices()) {
-											if(ver.getLabel().equals(lis.get(j))) {
-												list.add(ver);
-											}
-										}
-									}
+									Vertex v1 = map.get(lis.get(3));
+									Vertex v2 = map.get(lis.get(4));
+									list.add(v1);
+									list.add(v2);
 									movi.addVertices(list);
-									log.info("添加边"+lis.get(0));
+//									log.info("添加边"+lis.get(0));
+									lili.add(lis.get(0));
 									graph.addEdge(movi);
 									break;
 								case "MovieDirectorRelation":
 									MovieDirectorRelation movd = new MovieDirectorRelation(lis.get(0)+count,Double.parseDouble(lis.get(2)));
 									List<Vertex> list1 = new ArrayList<>();
-									for(int j=3;j<5;j++) {
-										for(Vertex ver : graph.vertices()) {
-											if(ver.getLabel().equals(lis.get(j))) {
-												list1.add(ver);
-											}
-										}
-									}
+									Vertex v3 = map.get(lis.get(3));
+									Vertex v4 = map.get(lis.get(4));
+									list1.add(v3);
+									list1.add(v4);
 									movd.addVertices(list1);
-									log.info("添加边"+lis.get(0));
+//									log.info("添加边"+lis.get(0));
+									lili.add(lis.get(0));
 									graph.addEdge(movd);
 									break;
 								}
@@ -316,40 +327,34 @@ public class MovieGraphFactory extends GraphFactory{
 							case "MovieActorRelation":
 								MovieActorRelation movi = new MovieActorRelation(lis.get(0), Double.parseDouble(lis.get(2)));
 								List<Vertex> list = new ArrayList<>();
-								for(int j=3;j<5;j++) {
-									for(Vertex ver : graph.vertices()) {
-										if(ver.getLabel().equals(lis.get(j))) {
-											list.add(ver);
-										}
-									}
-								}
+								Vertex v1 = map.get(lis.get(3));
+								Vertex v2 = map.get(lis.get(4));
+								list.add(v1);
+								list.add(v2);
 								movi.addVertices(list);
-								log.info("添加边"+lis.get(0));
+//								log.info("添加边"+lis.get(0));
+								lili.add(lis.get(0));
 								graph.addEdge(movi);
 								break;
 							case "MovieDirectorRelation":
 								MovieDirectorRelation movd = new MovieDirectorRelation(lis.get(0),Double.parseDouble(lis.get(2)));
 								List<Vertex> list1 = new ArrayList<>();
-								for(int j=3;j<5;j++) {
-									for(Vertex ver : graph.vertices()) {
-										if(ver.getLabel().equals(lis.get(j))) {
-											list1.add(ver);
-										}
-									}
-								}
+								Vertex v3 = map.get(lis.get(3));
+								Vertex v4 = map.get(lis.get(4));
+								list1.add(v3);
+								list1.add(v4);
 								movd.addVertices(list1);
-								log.info("添加边"+lis.get(0));
+//								log.info("添加边"+lis.get(0));
+								lili.add(lis.get(0));
 								graph.addEdge(movd);
 								break;
 							}
+							first++;
 						}
 					}
 				}
 			}
-			bf.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NumberFormatException e) {
+		}catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Vertexception e) {
 			System.out.println(e.getMessage());
@@ -376,22 +381,12 @@ public class MovieGraphFactory extends GraphFactory{
 //			Graph<Vertex, Edge> g=e.fixedweight();
 //			graph=g;
 			ff=1;
-		} catch (yearexception e) {
+		}catch (Scoreexception e) {
 			System.out.println(e.getMessage());
 //			Graph<Vertex, Edge> g=e.fixedweight();
 //			graph=g;
 			ff=1;
-		} catch (Scoreexception e) {
-			System.out.println(e.getMessage());
-//			Graph<Vertex, Edge> g=e.fixedweight();
-//			graph=g;
-			ff=1;
-		} catch (Integerexception e) {
-			System.out.println(e.getMessage());
-//			Graph<Vertex, Edge> g=e.fixedit();
-//			graph=g;
-			ff=1;
-		} catch (Genderexception e) {
+		}catch (Genderexception e) {
 			System.out.println(e.getMessage());
 //			Graph<Vertex, Edge> g=e.fixedit();
 //			graph=g;
@@ -401,7 +396,19 @@ public class MovieGraphFactory extends GraphFactory{
 //			Graph<Vertex, Edge> g=e.fixedit();
 //			graph=g;
 			ff=1;
+		}  
+		catch (Integerexception e) {
+			System.out.println(e.getMessage());
+//			Graph<Vertex, Edge> g=e.fixedit();
+//			graph=g;
+			ff=1;
 		} 
+//		 catch (yearexception e) {
+//				System.out.println(e.getMessage());
+////				Graph<Vertex, Edge> g=e.fixedweight();
+////				graph=g;
+//				ff=1;
+//			} 
 		if(ff==1) {
 			return null;
 		}

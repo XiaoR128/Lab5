@@ -72,30 +72,35 @@ public class SocialNetwork extends ConcreteGraph{
 	 */
 	@Override
 	public boolean addEdge(Edge edge) {
-		if(edges.isEmpty()) {
-			edges.add(edge);
-			return true;
-		}else {
-			for(Edge ed:edges) {
-				if(ed.equals(edge)) {
-					return false;
-				}
-			}
-			double sum=0;
-			for(Edge ed:edges) {
-				sum=sum+ed.getweight();
-			}
-			if(1-sum<1e-6) {
-				double wa = edge.getweight();
-				for(Edge eachedge : edges) {
-					double wb = eachedge.getweight();
-					eachedge.setweight(wb*(1-wa));
-				}
-				edges.add(edge);
-			}else {
-				edges.add(edge);
-			}
+//		if(edges.isEmpty()) {
+//			edges.add(edge);
+//			return true;
+//		}else {
+//			for(Edge ed:edges) {
+//				if(ed.equals(edge)) {
+//					return false;
+//				}
+//			}
+		
+		
+		double sum = 0;
+		for (Edge ed : edges) {
+			sum = sum + ed.getweight();
 		}
+		if (1 - sum < 1e-6) {
+			double wa = edge.getweight();
+			for (Edge eachedge : edges) {
+				double wb = eachedge.getweight();
+				eachedge.setweight(wb * (1 - wa));
+			}
+			edges.add(edge);
+		} else {
+			edges.add(edge);
+		}
+		
+//		edges.add(edge);
+		
+//		}
 //		checkRep();
 		return true;
 	}
@@ -194,7 +199,7 @@ public class SocialNetwork extends ConcreteGraph{
 			}
 			sourcemap.put(onevertex, listdou);
 		}
-		checkRep();
+//		checkRep();
 		return sourcemap;
 	}
 	
@@ -257,7 +262,7 @@ public class SocialNetwork extends ConcreteGraph{
 			}
 			targetmap.put(onevertex, listdou);
 		}
-		checkRep();
+//		checkRep();
 		return targetmap;
 	}
 	

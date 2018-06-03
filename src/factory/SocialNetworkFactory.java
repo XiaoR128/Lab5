@@ -1,12 +1,12 @@
 package factory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.logging.FileHandler;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -22,6 +22,7 @@ import MyException.Rulesexception;
 import MyException.Samelabelexception;
 import MyException.Vertexception;
 import MyException.Weightrong;
+import Strategy.InmethodStrategy;
 import edge.CommentTie;
 import edge.Edge;
 import edge.ForwardTie;
@@ -34,22 +35,26 @@ public class SocialNetworkFactory extends GraphFactory{
 	private static String name = SocialNetworkFactory.class.getName();      
 	private static Logger log = Logger.getLogger(name);
 	@Override
-	public Graph<Vertex, Edge> createGraph(String filePath){
-		FileReader file;
+	public Graph<Vertex, Edge> createGraph(String filePath,InmethodStrategy in){
 		int count=0;
 		Graph<Vertex, Edge> graph = new SocialNetwork();
 		int ff=0;
 		try {
-			File file1 = new File("src/logger/logger2.txt");
-			file1.delete();
-			file1.createNewFile();
-			FileHandler fileHandler = new FileHandler("src/logger/logger2.txt"); 
-            fileHandler.setLevel(Level.INFO); 
-            fileHandler.setFormatter(new MyLogHander());
-            log.addHandler(fileHandler); 
-			file = new FileReader(filePath);
-			BufferedReader bf = new BufferedReader(file);
-			String line = null;
+			ConsoleHandler consoleHandler = new ConsoleHandler();
+			consoleHandler.setLevel(Level.INFO);
+			log.addHandler(consoleHandler);
+            
+			Map<String, Vertex> map = new HashMap<>();
+			int first =0;
+			Set<String> lili = new HashSet<>();
+			
+			long start = System.currentTimeMillis();
+			String s = in.input(filePath);
+			long end = System.currentTimeMillis();
+			System.out.println("读入文件的时间：" + (end - start)+"ms");
+			String[] ss = s.split("\n|\r");
+			
+//			String line = null;
 			List<String> listname = new ArrayList<>();
 			Pattern ppp=Pattern.compile("-[0-9]\\d*\\.*\\d*");
 			Pattern ppp1=Pattern.compile("[0-9]\\d*");
@@ -63,11 +68,9 @@ public class SocialNetworkFactory extends GraphFactory{
 			Pattern p3=
 			Pattern.compile("Edge\\s*=\\s*<\"\\w+\",\\s*\"(ForwardTie|CommentTie|FriendTie)\",\\s*\"[0-9]\\d*\\.*\\d*\",\\s*\"\\w+\",\\s*\"\\w+\",\\s*\"Yes\">");
 //			GraphPoet graph = new GraphPoet();
-			while((line=bf.readLine())!=null) {
-				if(line.isEmpty()) {
-					continue;
-				}
+			for (int i = 0; i < ss.length; i++) {
 //				System.out.println(p3.matcher(line).matches());
+				String line = ss[i];
 				if(p000.matcher(line).matches()) {
 					log.info("Warning：此图中出现了超边，处理方法：忽略");
 					continue;
@@ -122,7 +125,8 @@ public class SocialNetworkFactory extends GraphFactory{
 						arg[1] = li.get(3);
 						listname.add(li.get(0));
 						Vertex per = new PersonVertexFactory().createVertex(li.get(0), "Person", arg);
-						log.info("添加点"+li.get(0));
+						map.put(li.get(0), per);
+//						log.info("添加点"+li.get(0));
 						graph.addVertex(per);
 					}
 				}
@@ -159,56 +163,62 @@ public class SocialNetworkFactory extends GraphFactory{
 						if(Double.parseDouble(lis.get(2))>=1) {
 							handleoverweight();
 						}
-						if (!graph.edges().isEmpty()) {
+						if (first!=0) {
 							int ii = 0;
-							for (Edge ed : graph.edges()) {
-								if (ed.getlabel().equals(lis.get(0))) {
-									count++;
-									ii++;
-								}
+//							for (Edge ed : graph.edges()) {
+//								if (ed.getlabel().equals(lis.get(0))) {
+//									count++;
+//									ii++;
+//								}
+//							}
+							if(lili.contains(lis.get(0))) {
+								count++;
+								i++;
 							}
 							if(ii==0) {
 								switch (lis.get(1)) {
 								case "FriendTie":
 									FriendTie fri = new FriendTie(lis.get(0), Double.parseDouble(lis.get(2)));
 									List<Vertex> list = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list.add(ver);
-											}
-										}
-									}
+									Vertex v5 = map.get(lis.get(3));
+									Vertex v6 = map.get(lis.get(4));
+									list.add(v5);
+									list.add(v6);
 									fri.addVertices(list);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(fri);
 									break;
 								case "CommentTie":
 									CommentTie com = new CommentTie(lis.get(0), Double.parseDouble(lis.get(2)));
 									List<Vertex> list1 = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list1.add(ver);
-											}
-										}
-									}
+//									List<Vertex> list2 = new ArrayList<>();
+									Vertex v3 = map.get(lis.get(3));
+									Vertex v4 = map.get(lis.get(4));
+									list1.add(v3);
+									list1.add(v4);
 									com.addVertices(list1);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(com);
 									break;
 								case "ForwardTie":
 									ForwardTie forw = new ForwardTie(lis.get(0), Double.parseDouble(lis.get(2)));
+//									List<Vertex> list2 = new ArrayList<>();
 									List<Vertex> list2 = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list2.add(ver);
-											}
-										}
-									}
+									Vertex v1 = map.get(lis.get(3));
+									Vertex v2 = map.get(lis.get(4));
+									list2.add(v1);
+									list2.add(v2);
 									forw.addVertices(list2);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(forw);
 								}
 							}
@@ -218,46 +228,47 @@ public class SocialNetworkFactory extends GraphFactory{
 								// Double.parseDouble(lis.get(2)));
 								switch (lis.get(1)) {
 								case "FriendTie":
-									FriendTie fri = new FriendTie(lis.get(0) + count, Double.parseDouble(lis.get(2)));
+									FriendTie fri = new FriendTie(lis.get(0)+count, Double.parseDouble(lis.get(2)));
 									List<Vertex> list = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list.add(ver);
-											}
-										}
-									}
+									Vertex v5 = map.get(lis.get(3));
+									Vertex v6 = map.get(lis.get(4));
+									list.add(v5);
+									list.add(v6);
 									fri.addVertices(list);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(fri);
 									break;
 								case "CommentTie":
-									CommentTie com = new CommentTie(lis.get(0) + count, Double.parseDouble(lis.get(2)));
+									CommentTie com = new CommentTie(lis.get(0)+count, Double.parseDouble(lis.get(2)));
 									List<Vertex> list1 = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list1.add(ver);
-											}
-										}
-									}
+//									List<Vertex> list2 = new ArrayList<>();
+									Vertex v3 = map.get(lis.get(3));
+									Vertex v4 = map.get(lis.get(4));
+									list1.add(v3);
+									list1.add(v4);
 									com.addVertices(list1);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(com);
 									break;
 								case "ForwardTie":
-									ForwardTie forw = new ForwardTie(lis.get(0) + count,
-											Double.parseDouble(lis.get(2)));
+									ForwardTie forw = new ForwardTie(lis.get(0)+count, Double.parseDouble(lis.get(2)));
+//									List<Vertex> list2 = new ArrayList<>();
 									List<Vertex> list2 = new ArrayList<>();
-									for (int j = 3; j < 5; j++) {
-										for (Vertex ver : graph.vertices()) {
-											if (ver.getLabel().equals(lis.get(j))) {
-												list2.add(ver);
-											}
-										}
-									}
+									Vertex v1 = map.get(lis.get(3));
+									Vertex v2 = map.get(lis.get(4));
+									list2.add(v1);
+									list2.add(v2);
 									forw.addVertices(list2);
-									log.info("添加边"+lis.get(0));
+									
+									lili.add(lis.get(0));
+									
+//									log.info("添加边"+i);
 									graph.addEdge(forw);
 								}
 							}
@@ -266,53 +277,53 @@ public class SocialNetworkFactory extends GraphFactory{
 							case "FriendTie":
 								FriendTie fri = new FriendTie(lis.get(0), Double.parseDouble(lis.get(2)));
 								List<Vertex> list = new ArrayList<>();
-								for (int j = 3; j < 5; j++) {
-									for (Vertex ver : graph.vertices()) {
-										if (ver.getLabel().equals(lis.get(j))) {
-											list.add(ver);
-										}
-									}
-								}
+								Vertex v5 = map.get(lis.get(3));
+								Vertex v6 = map.get(lis.get(4));
+								list.add(v5);
+								list.add(v6);
 								fri.addVertices(list);
-								log.info("添加边"+lis.get(0));
+								
+								lili.add(lis.get(0));
+								
+//								log.info("添加边"+i);
 								graph.addEdge(fri);
 								break;
 							case "CommentTie":
 								CommentTie com = new CommentTie(lis.get(0), Double.parseDouble(lis.get(2)));
 								List<Vertex> list1 = new ArrayList<>();
-								for (int j = 3; j < 5; j++) {
-									for (Vertex ver : graph.vertices()) {
-										if (ver.getLabel().equals(lis.get(j))) {
-											list1.add(ver);
-										}
-									}
-								}
+//								List<Vertex> list2 = new ArrayList<>();
+								Vertex v3 = map.get(lis.get(3));
+								Vertex v4 = map.get(lis.get(4));
+								list1.add(v3);
+								list1.add(v4);
 								com.addVertices(list1);
-								log.info("添加边"+lis.get(0));
+								
+								lili.add(lis.get(0));
+								
+//								log.info("添加边"+i);
 								graph.addEdge(com);
 								break;
 							case "ForwardTie":
 								ForwardTie forw = new ForwardTie(lis.get(0), Double.parseDouble(lis.get(2)));
+//								List<Vertex> list2 = new ArrayList<>();
 								List<Vertex> list2 = new ArrayList<>();
-								for (int j = 3; j < 5; j++) {
-									for (Vertex ver : graph.vertices()) {
-										if (ver.getLabel().equals(lis.get(j))) {
-											list2.add(ver);
-										}
-									}
-								}
+								Vertex v1 = map.get(lis.get(3));
+								Vertex v2 = map.get(lis.get(4));
+								list2.add(v1);
+								list2.add(v2);
 								forw.addVertices(list2);
-								log.info("添加边"+lis.get(0));
+								
+								lili.add(lis.get(0));
+								
+//								log.info("添加边"+i);
 								graph.addEdge(forw);
 							}
+							first++;
 						}
 					}
 				}
 			}
-			bf.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NumberFormatException e) {
+		}catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Vertexception e) {
 			System.out.println(e.getMessage());
@@ -464,9 +475,6 @@ public class SocialNetworkFactory extends GraphFactory{
 		log.info("错误：点的label重复,处理方法：重新读取文件");
 		throw new Samelabelexception("Wrong:点的label重复");
 	}
-//	public static void main(String[] args) throws IOException {
-//		GraphFactory g = new SocialNetworkFactory();
-//		Graph<Vertex, Edge> gra = g.createGraph("src/txt/SocialNetwork.txt");
-//		System.out.println(gra.toString());
-//	}
+	
+	
 }

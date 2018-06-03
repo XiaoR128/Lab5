@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 import edge.Edge;
 import edge.SameMovieHyperEdge;
@@ -99,11 +97,11 @@ public class ConcreteGraph implements Graph<Vertex,Edge>{
 	 */
 	@Override
 	public boolean addEdge(Edge edge) {
-		for(Edge edg : edges) { 
-			if (edg.equals(edge)) {
-				return false;
-			}
-		}
+//		for(Edge edg : edges) { 
+//			if (edg.equals(edge)) {
+//				return false;
+//			}
+//		}
 		edges.add(edge);
 		return true;
 	}
@@ -127,11 +125,12 @@ public class ConcreteGraph implements Graph<Vertex,Edge>{
 	 * 获取图中的所有的边的集合
 	 */
 	@Override
-	public Set<Edge> edges(){
-		Set<Edge> edge = new HashSet<>();
-		for(Edge eachedge : edges) {
-			edge.add(eachedge);
-		}
+	public List<Edge> edges(){
+		List<Edge> edge = new ArrayList<>();
+//		for(Edge eachedge : edges) {
+//			edge.add(eachedge);
+//		}
+		edge = edges;
 		return edge;
 	}
 

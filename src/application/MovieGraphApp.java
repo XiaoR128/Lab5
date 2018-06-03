@@ -15,6 +15,12 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Strategy.BufferedoutputStream;
+import Strategy.FileoutputStream;
+import Strategy.Filewriter;
+import Strategy.InmethodStrategy;
+import Strategy.InputStream;
+import Strategy.OutmethodStrategy;
 import edge.Edge;
 import edge.MovieActorRelation;
 import edge.MovieDirectorRelation;
@@ -47,8 +53,8 @@ public class MovieGraphApp {
 	/**
 	 * 创建一张图
 	 */
-	public Graph<Vertex, Edge> creatgraph(String file) throws IOException{
-		this.graph = new MovieGraphFactory().createGraph(file);
+	public Graph<Vertex, Edge> creatgraph(String file,InmethodStrategy in){
+		this.graph = new MovieGraphFactory().createGraph(file,in);
 		return graph;
 	}
 	
@@ -90,7 +96,7 @@ public class MovieGraphApp {
 			ve = new  DirectorVertexFactory().createVertex(b[0], b[1], p);
 		}
 		graph.addVertex(ve);
-		log.info("创建点"+b[0]);
+//		log.info("创建点"+b[0]);
 		System.out.println("创建点"+b[0]+"成功！");
 		return true;
 	}
@@ -123,7 +129,7 @@ public class MovieGraphApp {
 				graph.removeVertex(v);
 			}
 		}
-		log.info("删除点"+b1[0]);
+//		log.info("删除点"+b1[0]);
 		System.out.println("删除点成功！");
 		return true;
 	}
@@ -169,7 +175,7 @@ public class MovieGraphApp {
 			ed = new MovieActorRelationFactory().createEdge(b1[0], b1[1], Double.parseDouble(b1[2]), vertice);
 		}
 		graph.addEdge(ed);
-		log.info("添加边"+b1[0]);
+//		log.info("添加边"+b1[0]);
 		System.out.println("添加成功！");
 		return true;
 	}
@@ -203,7 +209,7 @@ public class MovieGraphApp {
 			}
 		}
 		Edge ed = new SameMovieHyperEdgeFactory().createEdge(b1[0], b1[1], Double.parseDouble(b1[2]), vertice);
-		log.info("添加边"+b1[0]);
+//		log.info("添加边"+b1[0]);
 		graph.addEdge(ed);
 	}
 	
@@ -234,7 +240,7 @@ public class MovieGraphApp {
 			if(ed.getlabel().equals(a)) {
 				flag=0;
 				graph.removeEdge(ed);
-				log.info("删除边"+a);
+//				log.info("删除边"+a);
 				System.out.println("删除成功！");
 			}
 		}
@@ -272,7 +278,7 @@ public class MovieGraphApp {
 				ed.setlabel(b1[1]);
 			}
 		}
-		log.info("修改边"+b1[0]+"为"+b1[1]);
+//		log.info("修改边"+b1[0]+"为"+b1[1]);
 		System.out.println("修改成功！");
 	}
 	
@@ -449,62 +455,66 @@ public class MovieGraphApp {
 	 * 将读入的图数据存储在result文件夹的MovieGraphResult.txt中
 	 * @param graph
 	 */
-	public void writeback(Graph<Vertex, Edge> graph) {
-		try {
- 			File file2 = new File("src/result/MovieGraphResult.txt");
- 			file2.delete();
- 			file2.createNewFile();
- 			PrintWriter pw = new PrintWriter(new FileWriter("src/result/MovieGraphResult.txt"));
-			String line=new String();
-			line = line+"GraphType = \"MovieGraph\""+"\n";
-			line = line+"VertexType = \"Movie\", \"Actor\", \"Director\""+"\n";
-			for(Vertex v : graph.vertices()) {
-				if(v instanceof Movie) {
-					Movie ve=(Movie) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Movie\", <\""+ve.getyear()+"\", \""+
-					ve.getcountry()+"\", \""+ve.getscore()+"\">>"+"\n";
-				}else if(v instanceof Director) {
-					Director ve=(Director) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Director\", <\""+ve.getage()+"\", \""+
-					ve.getgender()+"\">>"+"\n";
-				}else if(v instanceof Actor) {
-					Actor ve=(Actor) v;
-					String la = ve.getLabel();
-					line = line+"Vertex = <\""+la+"\", \"Actor\", <\""+ve.getage()+"\", \""+
-					ve.getgender()+"\">>"+"\n";
-				}
+	public void writeback(Graph<Vertex, Edge> graph,OutmethodStrategy out) {
+		List<String> li = new ArrayList<>();
+		li.add("GraphType = \"MovieGraph\"" + "\n");
+		li.add("VertexType = \"Movie\", \"Actor\", \"Director\"" + "\n");
+		for (Vertex v : graph.vertices()) {
+			if (v instanceof Movie) {
+				Movie ve = (Movie) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Movie\", <\"" + ve.getyear() + "\", \"" + ve.getcountry()
+						+ "\", \"" + ve.getscore() + "\">>" + "\n");
+			} else if (v instanceof Director) {
+				Director ve = (Director) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Director\", <\"" + ve.getage() + "\", \"" + ve.getgender()
+						+ "\">>" + "\n");
+			} else if (v instanceof Actor) {
+				Actor ve = (Actor) v;
+				String la = ve.getLabel();
+				li.add("Vertex = <\"" + la + "\", \"Actor\", <\"" + ve.getage() + "\", \"" + ve.getgender()
+						+ "\">>" + "\n");
 			}
-			line = line+"EdgeType = \"MovieActorRelation\", \"MovieDirectorRelation\",\"SameMovieHyperEdge\""+"\n";
-			for(Edge e:graph.edges()) {
-				if(e instanceof MovieDirectorRelation) {
-					MovieDirectorRelation ed = (MovieDirectorRelation) e;
-					String la = ed.getlabel();
-					line = line+"Edge = <\""+la+"\", \"MovieDirectorRelation\", \""+ed.getweight()+"\",  \""+
-							ed.vertices().get(0).getLabel()+"\",\""+ed.vertices().get(1).getLabel()+"\", \"No\">"+"\n";
-				}else if(e instanceof MovieActorRelation) {
-					MovieActorRelation ed = (MovieActorRelation) e;
-					String la = ed.getlabel();
-					line = line+"Edge = <\""+la+"\", \"MovieActorRelation\", \""+ed.getweight()+"\",  \""+
-							ed.vertices().get(0).getLabel()+"\",\""+ed.vertices().get(1).getLabel()+"\", \"No\">"+"\n";
-				}else if(e instanceof SameMovieHyperEdge) {
-					SameMovieHyperEdge ed = (SameMovieHyperEdge) e;
-					String la = ed.getlabel();
-					line = line+"HyperEdge = <\""+la+"\",\"SameMovieHyperEdge\",{\"";
-					List<Vertex> li = ed.vertices();
-					for(int i=0;i<li.size()-1;i++) {
-						line = line+li.get(i).getLabel()+"\", \"";
-					}
-					line = line+li.get(li.size()-1).getLabel()+"\"}>"+"\n";
-				}
-			}
-			pw.println(line);
-			System.out.println("写回成功！");
-			pw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
+		li.add("EdgeType = \"MovieActorRelation\", \"MovieDirectorRelation\",\"SameMovieHyperEdge\"" + "\n");
+		for (Edge e : graph.edges()) {
+			if (e instanceof MovieDirectorRelation) {
+				MovieDirectorRelation ed = (MovieDirectorRelation) e;
+				String la = ed.getlabel();
+				li.add("Edge = <\"" + la + "\", \"MovieDirectorRelation\", \"" + ed.getweight() + "\",  \""
+						+ ed.vertices().get(0).getLabel() + "\",\"" + ed.vertices().get(1).getLabel() + "\", \"No\">"
+						+ "\n");
+			} else if (e instanceof MovieActorRelation) {
+				MovieActorRelation ed = (MovieActorRelation) e;
+				String la = ed.getlabel();
+				li.add("Edge = <\"" + la + "\", \"MovieActorRelation\", \"" + ed.getweight() + "\",  \""
+						+ ed.vertices().get(0).getLabel() + "\",\"" + ed.vertices().get(1).getLabel() + "\", \"No\">"
+						+ "\n");
+			} else if (e instanceof SameMovieHyperEdge) {
+				SameMovieHyperEdge ed = (SameMovieHyperEdge) e;
+				String la = ed.getlabel();
+				li.add("HyperEdge = <\"" + la + "\",\"SameMovieHyperEdge\",{\"");
+				List<Vertex> li1 = ed.vertices();
+				for (int i = 0; i < li1.size() - 1; i++) {
+					li.add(li1.get(i).getLabel() + "\", \"");
+				}
+				li.add(li1.get(li1.size() - 1).getLabel() + "\"}>" + "\n");
+			}
+		}
+
+		File file1 = new File("src/result/MovieGraphResult.txt");
+		file1.delete();
+		try {
+			file1.createNewFile();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		long start = System.currentTimeMillis();
+		out.output("src/result/MovieGraphResult.txt", li);
+		long end = System.currentTimeMillis();
+		System.out.println("写回时间:" + (end - start)+"ms");
 	}
 	
 	/*
@@ -526,48 +536,57 @@ public class MovieGraphApp {
 			System.out.println("(17:退出)");
 			c = scan.nextInt();
 			if(c==1) {
-				Graph<Vertex, Edge> gg = app.creatgraph("src/txt/MovieGraph.txt");
+				Graph<Vertex, Edge> gg = app.creatgraph("src/Lab5_txt/file2.txt",new InputStream());
 				while(gg==null) {
 					System.out.println("请选择(输入)一个其他的文本文件(的路径):");
 					Scanner scan1 = new Scanner(System.in);
 					String s = scan1.nextLine();
 					scan1.close();
-					gg = app.creatgraph(s);
+					gg = app.creatgraph(s,new InputStream());
 				}
 				System.out.println("图构建成功！");
-				System.out.println(app.graph.toString());
+				List<String> li = new ArrayList<>();
+				for(Vertex v : app.graph.vertices()) {
+					li.add(v.toString());
+					li.add("\n");
+				}
+				for(Edge e :app.graph.edges()) {
+					li.add(e.toString());
+					li.add("\n");
+				}
+				System.out.println(li);
 			}
 			else if(c==2) {
 				app.addvert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==3) {
 				app.removevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==4) {
 				app.changevert(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==5) {
 				app.removeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==6) {
 				app.addedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==7) {
 				app.changeedge(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==8) {
 				app.chaneweight(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==9) {
 				app.changefor(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==10) {
 				app.calcucent(app.graph);
@@ -580,7 +599,7 @@ public class MovieGraphApp {
 			}
 			else if(c==13) {
 				app.addsame(app.graph);
-				System.out.println(app.graph.toString());
+//				System.out.println(app.graph.toString());
 			}
 			else if(c==14){
 				app.lookfortime("src/logger/logger4.txt");
@@ -588,7 +607,7 @@ public class MovieGraphApp {
 			else if(c==15) {
 				app.lookformethod("src/logger/logger4.txt");
 			}else if(c==16) {
-				app.writeback(app.graph);
+				app.writeback(app.graph,new BufferedoutputStream());
 			}else if(c==17) {
 				flag=0;
 			}

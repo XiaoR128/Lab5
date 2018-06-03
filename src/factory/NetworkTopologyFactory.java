@@ -1,12 +1,12 @@
 package factory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.logging.FileHandler;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -20,6 +20,7 @@ import MyException.Rulesexception;
 import MyException.Samelabelexception;
 import MyException.Vertexception;
 import MyException.Weightrong;
+import Strategy.InmethodStrategy;
 import edge.Edge;
 import edge.NetworkConnection;
 import graph.Graph;
@@ -31,24 +32,27 @@ public class NetworkTopologyFactory extends GraphFactory{
 	private static String name = SocialNetworkFactory.class.getName();      
 	private static Logger log = Logger.getLogger(name);
 	@Override
-	public Graph<Vertex, Edge> createGraph(String filePath){
-		FileReader file;
+	public Graph<Vertex, Edge> createGraph(String filePath,InmethodStrategy in){
 		int count=0;
 		Graph<Vertex, Edge> graph = new NetworkTopology();
 		int ff=0;
 		try {
 			//添加日志
-			File file1 = new File("src/logger/logger3.txt");
-			file1.delete();
-			file1.createNewFile();
-			FileHandler fileHandler = new FileHandler("src/logger/logger3.txt"); 
-            fileHandler.setLevel(Level.INFO); 
-            fileHandler.setFormatter(new MyLogHander());
-            log.addHandler(fileHandler); 
+			ConsoleHandler consoleHandler = new ConsoleHandler();
+			consoleHandler.setLevel(Level.INFO);
+			log.addHandler(consoleHandler);
             
-			file = new FileReader(filePath);
-			BufferedReader bf = new BufferedReader(file);
-			String line = null;
+			Map<String, Vertex> map = new HashMap<>();
+			int first =0;
+			Set<Undirecom> set = new HashSet<>();
+			Set<String> lili = new HashSet<>();
+			
+			long start = System.currentTimeMillis();
+			String s = in.input(filePath);
+			long end = System.currentTimeMillis();
+			System.out.println("读入文件的时间：" + (end - start)+"ms");
+			String[] ss = s.split("\n|\r");
+			
 			List<String> listname = new ArrayList<>();
 			Pattern ppp=Pattern.compile("-[0-9]\\d*\\.*\\d*");
 			Pattern ppp1=Pattern.compile("((?:(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d))))");
@@ -61,10 +65,8 @@ public class NetworkTopologyFactory extends GraphFactory{
 			Pattern p3=
 			Pattern.compile("Edge\\s*=\\s*<\"\\w+\",\\s*\"NetworkConnection\",\\s*\"[0-9]\\d*\\.*\\d*\",\\s*\"\\w+\",\\s*\"\\w+\",\\s*\"No\">");
 //			GraphPoet graph = new GraphPoet();
-			while((line=bf.readLine())!=null) {
-				if(line.isEmpty()) {
-					continue;
-				}
+			for (int i = 0; i < ss.length; i++) {
+				String line = ss[i];
 				if(p000.matcher(line).matches()) {
 					log.info("Warning：此图中出现了超边，处理方法：忽略");
 					continue;
@@ -117,7 +119,8 @@ public class NetworkTopologyFactory extends GraphFactory{
 							mid[0] = li.get(2);
 							listname.add(li.get(0));
 							Vertex com = new ComputerVertexFactory().createVertex(li.get(0), "Computer", mid);
-							log.info("添加点"+li.get(0));
+//							log.info("添加点"+li.get(0));
+							map.put(li.get(0), com);
 							graph.addVertex(com);
 							break;
 						case "Router":
@@ -125,7 +128,8 @@ public class NetworkTopologyFactory extends GraphFactory{
 							mid1[0] = li.get(2);
 							listname.add(li.get(0));
 							Vertex rou = new RouterVertexFactory().createVertex(li.get(0), "Router", mid1);
-							log.info("添加点"+li.get(0));
+//							log.info("添加点"+li.get(0));
+							map.put(li.get(0), rou);
 							graph.addVertex(rou);
 							break;
 						case "Server":
@@ -133,7 +137,8 @@ public class NetworkTopologyFactory extends GraphFactory{
 							mid2[0] = li.get(2);
 							listname.add(li.get(0));
 							Vertex ser = new ServerVertexFactory().createVertex(li.get(0), "Server", mid2);
-							log.info("添加点"+li.get(0));
+//							log.info("添加点"+li.get(0));
+							map.put(li.get(0), ser);
 							graph.addVertex(ser);
 							break;
 						case "WirelessRouter":
@@ -141,7 +146,8 @@ public class NetworkTopologyFactory extends GraphFactory{
 							mid3[0] = li.get(2);
 							listname.add(li.get(0));
 							Vertex wir = new WirelessRouterVertexFactory().createVertex(li.get(0), "WirelessRouter", mid3);
-							log.info("添加点"+li.get(0));
+//							log.info("添加点"+li.get(0));
+							map.put(li.get(0), wir);
 							graph.addVertex(wir);
 							break;
 						}
@@ -177,44 +183,54 @@ public class NetworkTopologyFactory extends GraphFactory{
 							log.info("Warning：此图中出现了loop，处理方法：忽略");
 							continue;
 						}
-						if(!graph.edges().isEmpty()) {
+						if(first!=0) {
 							int flag=0,ii=0;
-							for(Edge ed:graph.edges()) {
-								if(ed.getlabel().equals(lis.get(0))) {
-									count++;
-									ii++;
-								}
-								if((ed.vertices().get(0).getLabel().equals(lis.get(3)) || (ed.vertices().get(0).getLabel().equals(lis.get(4))))
-										&&(ed.vertices().get(1).getLabel().equals(lis.get(4))) || (ed.vertices().get(1).getLabel().equals(lis.get(3)))) {
-									flag++;
-								}
+//							for(Edge ed:graph.edges()) {
+//								if(ed.getlabel().equals(lis.get(0))) {
+//									count++;
+//									ii++;
+//								}
+//								if((ed.vertices().get(0).getLabel().equals(lis.get(3)) || (ed.vertices().get(0).getLabel().equals(lis.get(4))))
+//										&&(ed.vertices().get(1).getLabel().equals(lis.get(4))) || (ed.vertices().get(1).getLabel().equals(lis.get(3)))) {
+//									flag++;
+//								}
+//							}
+							if(lili.contains(lis.get(0))) {
+								count++;
+								i++;
+							}
+							Undirecom com = new Undirecom(lis.get(3), lis.get(4));
+							if(set.contains(com)) {
+								flag++;
 							}
 							if(flag!=1&&ii==0) {
 								NetworkConnection net = new NetworkConnection(lis.get(0), Double.parseDouble(lis.get(2)));
 								List<Vertex> list = new ArrayList<>();
-								for(int l=3;l<5;l++) {
-									for(Vertex vert : graph.vertices()) {
-										if(vert.getLabel().equals(lis.get(l))) {
-											list.add(vert);
-										}
-									}
-								}
+								Vertex v5 = map.get(lis.get(3));
+								Vertex v6 = map.get(lis.get(4));
+								list.add(v5);
+								list.add(v6);
 								net.addVertices(list);
-								log.info("添加边"+lis.get(0));
+								
+								set.add(com);
+								lili.add(lis.get(0));
+								
+//								log.info("添加边"+i);
 								graph.addEdge(net);
 							}else if(ii!=0) {
 								log.info("Warning：边中出现了重复的label，处理方法：将后续的每一个label后面都加一");
 								NetworkConnection net = new NetworkConnection(lis.get(0)+count, Double.parseDouble(lis.get(2)));
 								List<Vertex> list = new ArrayList<>();
-								for(int l=3;l<5;l++) {
-									for(Vertex vert : graph.vertices()) {
-										if(vert.getLabel().equals(lis.get(l))) {
-											list.add(vert);
-										}
-									}
-								}
+								Vertex v5 = map.get(lis.get(3));
+								Vertex v6 = map.get(lis.get(4));
+								list.add(v5);
+								list.add(v6);
 								net.addVertices(list);
-								log.info("添加边"+lis.get(0));
+								
+								set.add(com);
+								lili.add(lis.get(0));
+								
+//								log.info("添加边"+i);
 								graph.addEdge(net);
 								}else if(flag==1) {
 									log.info("Warning：单重边中出现了多重边，处理方法：只保留第一条边，忽略其他的边");
@@ -222,24 +238,24 @@ public class NetworkTopologyFactory extends GraphFactory{
 						}else {
 							NetworkConnection net = new NetworkConnection(lis.get(0), Double.parseDouble(lis.get(2)));
 							List<Vertex> list = new ArrayList<>();
-							for(int l=3;l<5;l++) {
-								for(Vertex vert : graph.vertices()) {
-									if(vert.getLabel().equals(lis.get(l))) {
-										list.add(vert);
-									}
-								}
-							}
+							Vertex v5 = map.get(lis.get(3));
+							Vertex v6 = map.get(lis.get(4));
+							list.add(v5);
+							list.add(v6);
 							net.addVertices(list);
-							log.info("添加边"+lis.get(0));
+							
+							Undirecom com = new Undirecom(lis.get(3), lis.get(4));
+							set.add(com);
+							lili.add(lis.get(0));
+							
+//							log.info("添加边"+i);
 							graph.addEdge(net);
+							first++;
 						}
 					}
 				}
 			}
-			bf.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NumberFormatException e) {
+		}catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Vertexception e) {
 			System.out.println(e.getMessage());
